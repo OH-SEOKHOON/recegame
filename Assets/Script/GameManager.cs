@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using TMPro;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -23,11 +24,13 @@ public class GameManager : Singleton<GameManager>
     public float energy;
     private float nextDecreaseTime = 0f;
     private float nextinstanceTime = 0f;
+    public TextMeshProUGUI gasscore;
 
     
     public override void OnAwake()
     {
         base.OnAwake();
+        energy = 110f;
     }
 
     public void StartGame()
@@ -36,7 +39,25 @@ public class GameManager : Singleton<GameManager>
         GamePanel.SetActive(true);
         SpawnRoad();
         SpawnCar();
-        energy = 100f;
+        energy = 110f;
+    }
+
+    void GameEnd()
+    {
+        GamePanel.SetActive(false);
+        EndPanel.SetActive(true);
+        Destroy(player);
+        for (int i = 0; i < roads.Length; i++)
+        {
+            Destroy(roads[i]);
+        }
+        Destroy(jerrycan);
+    }
+
+    public void RestartGame()
+    {
+        EndPanel.SetActive(false);
+        StartPanel.SetActive(true);
     }
 
     public void SpawnRoad()
@@ -110,10 +131,15 @@ public class GameManager : Singleton<GameManager>
             {
                 // 값 감소
                 energy -= 10f;
-                Debug.Log("Current Value: " + energy);
+                gasscore.text = energy.ToString();
 
                 // 다음 감소 시간 설정
                 nextDecreaseTime = Time.time + 1f;
+                
+                if (energy <= 0)
+                {
+                    GameEnd();
+                }
             }
             
             int randomInt = Random.Range(1, 11);
@@ -121,7 +147,7 @@ public class GameManager : Singleton<GameManager>
             if (Time.time >= nextinstanceTime)
             {
                 // 가스생성
-                if (randomInt < 7)
+                if (randomInt < 6)
                 {
                     SpawnGas();
                     Debug.Log("가스생성완료");
