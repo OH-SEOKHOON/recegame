@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,12 +6,19 @@ using UnityEngine;
 public class GameManager : Singleton<GameManager>
 {
     public GameObject StartPanel;
+    public GameObject GamePanel;
     public GameObject EndPanel;
+    
     public GameObject car;
     public GameObject road;
     public GameObject gas;
 
-    public GameObject[] roads = new GameObject[8];
+    private GameObject[] roads = new GameObject[8];
+    private float roadSpeed = 2f;
+
+    private GameObject player;
+    private float energy;
+    private float nextDecreaseTime = 0f;
     public override void OnAwake()
     {
         base.OnAwake();
@@ -19,30 +27,77 @@ public class GameManager : Singleton<GameManager>
     public void StartGame()
     {
         StartPanel.SetActive(false);
+        GamePanel.SetActive(true);
         SpawnRoad();
+        SpawnCar();
+        energy = 100f;
     }
 
     public void SpawnRoad()
     {
         for (int i = 0; i < roads.Length; i++)
         {
-            roads[i] = Instantiate(road, new Vector2(0, -4 + (i*2)), Quaternion.identity);
+            roads[i] = Instantiate(road, new Vector2(0, -4 + (i * 2)), Quaternion.identity);
         }
-        
-        CheckArray();
     }
-    
-    void CheckArray()
+
+    void SpawnCar()
+    {
+        player = Instantiate(car, new Vector2(0, -3), Quaternion.identity);
+        SpriteRenderer renderer = player.GetComponent<SpriteRenderer>();
+        renderer.sortingOrder = 1;
+    }
+
+
+    private void Update()
+    {
+        MoveRoad();
+        CheckGas();
+    }
+
+    public void MoveRoad()
     {
         for (int i = 0; i < roads.Length; i++)
         {
-            if (roads[i] == null)
+            // 도로를 아래로 이동
+            roads[i].transform.position += Vector3.down * roadSpeed * Time.deltaTime;
+
+            // y 위치가 -8 이하로 내려가면 위치를 재배치
+            if (roads[i].transform.position.y <= -8)
             {
-                Debug.LogError($"Road {i} is missing!");
+                roads[i].transform.position = new Vector2(0, 8);
             }
-            else
+        }
+    }
+
+    public void RightCar()
+    {
+        if (player.transform.position.x < 2)
+        {
+            player.transform.position += (Vector3.right * roadSpeed * Time.deltaTime);
+        }
+    }
+    
+    public void LeftCar()
+    {
+        if (player.transform.position.x > -2)
+        {
+            player.transform.position += (-Vector3.right * roadSpeed * Time.deltaTime);
+        }
+    }
+
+    public void CheckGas()
+    {
+        if (player != null)
+        {
+            if (Time.time >= nextDecreaseTime)
             {
-                Debug.Log($"Road {i} exists at position: {roads[i].transform.position}");
+                // 값 감소
+                energy -= 10f;
+                Debug.Log("Current Value: " + energy);
+
+                // 다음 감소 시간 설정
+                nextDecreaseTime = Time.time + 1f;
             }
         }
     }
