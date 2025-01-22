@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -17,8 +18,13 @@ public class GameManager : Singleton<GameManager>
     private float roadSpeed = 2f;
 
     private GameObject player;
-    private float energy;
+    
+    private GameObject jerrycan;
+    public float energy;
     private float nextDecreaseTime = 0f;
+    private float nextinstanceTime = 0f;
+
+    
     public override void OnAwake()
     {
         base.OnAwake();
@@ -48,6 +54,13 @@ public class GameManager : Singleton<GameManager>
         renderer.sortingOrder = 1;
     }
 
+    void SpawnGas()
+    {
+        jerrycan = Instantiate(gas, new Vector2(Random.Range(-2, 3), 8), Quaternion.identity);
+        SpriteRenderer renderer = jerrycan.GetComponent<SpriteRenderer>();
+        renderer.sortingOrder = 1;
+    }
+
 
     private void Update()
     {
@@ -57,15 +70,18 @@ public class GameManager : Singleton<GameManager>
 
     public void MoveRoad()
     {
-        for (int i = 0; i < roads.Length; i++)
+        if (player != null)
         {
-            // 도로를 아래로 이동
-            roads[i].transform.position += Vector3.down * roadSpeed * Time.deltaTime;
-
-            // y 위치가 -8 이하로 내려가면 위치를 재배치
-            if (roads[i].transform.position.y <= -8)
+            for (int i = 0; i < roads.Length; i++)
             {
-                roads[i].transform.position = new Vector2(0, 8);
+                // 도로를 아래로 이동
+                roads[i].transform.position += Vector3.down * roadSpeed * Time.deltaTime;
+
+                // y 위치가 -8 이하로 내려가면 위치를 재배치
+                if (roads[i].transform.position.y <= -8)
+                {
+                    roads[i].transform.position = new Vector2(0, 8);
+                }
             }
         }
     }
@@ -98,6 +114,21 @@ public class GameManager : Singleton<GameManager>
 
                 // 다음 감소 시간 설정
                 nextDecreaseTime = Time.time + 1f;
+            }
+            
+            int randomInt = Random.Range(1, 11);
+        
+            if (Time.time >= nextinstanceTime)
+            {
+                // 가스생성
+                if (randomInt < 7)
+                {
+                    SpawnGas();
+                    Debug.Log("가스생성완료");
+                }
+
+                // 다음 감소 시간 설정
+                nextinstanceTime = Time.time + 2f;
             }
         }
     }
